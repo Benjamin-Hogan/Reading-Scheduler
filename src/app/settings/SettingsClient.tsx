@@ -23,33 +23,32 @@ export default function SettingsPage() {
   const { settings, isLoading, updateSettings, error: settingsError } = useSettings();
   const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [googleConnected, setGoogleConnected] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [googleConnected, setGoogleConnected] = useState(
+    () => !!searchParams.get("google_connected")
+  );
+  const [message, setMessage] = useState<string | null>(() =>
+    searchParams.get("google_connected") ? "Google Calendar connected successfully" : null
+  );
+  const [actionError, setActionError] = useState<string | null>(() => {
+    const err = searchParams.get("google_error");
+    return err ? `Google connection failed: ${err}` : null;
+  });
   const [importStrategy, setImportStrategy] = useState<"merge" | "replace">("merge");
   const [templateName, setTemplateName] = useState("");
-  const [showLocalhostHint, setShowLocalhostHint] = useState(false);
+  const [showLocalhostHint] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const host = window.location.hostname;
+    return host !== "localhost" && host !== "127.0.0.1";
+  });
 
   useEffect(() => {
-    const host = window.location.hostname;
-    setShowLocalhostHint(host !== "localhost" && host !== "127.0.0.1");
-
     fetch("/api/auth/google/status")
       .then((r) => r.json())
       .then((data: { connected?: boolean }) => {
         if (data.connected) setGoogleConnected(true);
       })
       .catch(() => {});
-
-    if (searchParams.get("google_connected")) {
-      setGoogleConnected(true);
-      setMessage("Google Calendar connected successfully");
-    }
-    const err = searchParams.get("google_error");
-    if (err) {
-      setActionError(`Google connection failed: ${err}`);
-    }
-  }, [searchParams]);
+  }, []);
 
   const toggleDay = async (day: WeekdayKey) => {
     const days = settings.defaultActiveDays as WeekdayKey[];
@@ -140,7 +139,7 @@ export default function SettingsPage() {
       <FadeIn>
         <div className="mx-auto max-w-2xl space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">Settings</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">Settings</h1>
             <p className="text-zinc-500">Defaults, calendar connection, and data backup</p>
           </div>
 

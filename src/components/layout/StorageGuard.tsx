@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { isStorageAvailable } from "@/lib/db/storage";
 
 export function StorageGuard({ children }: { children: React.ReactNode }) {
-  const [blocked, setBlocked] = useState(false);
-
-  useEffect(() => {
-    setBlocked(!isStorageAvailable());
-  }, []);
+  const [blocked] = useState(() => !isStorageAvailable());
 
   if (!blocked) return <>{children}</>;
 

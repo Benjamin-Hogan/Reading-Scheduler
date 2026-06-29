@@ -98,7 +98,7 @@ export default function PlansHubPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="gradient-text text-3xl font-bold tracking-tight">Reading Plans</h1>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl gradient-text">Reading Plans</h1>
                 <PulseGlow>
                   <Sparkles className="h-5 w-5 text-amber-400 animate-sparkle" />
                 </PulseGlow>
@@ -107,7 +107,7 @@ export default function PlansHubPage() {
                 Plan once, live from your calendar. Update progress when you visit.
               </p>
             </div>
-            <Button asChild size="lg" className="gap-2 shadow-lg shadow-indigo-300/50 dark:shadow-none" sound="pop">
+            <Button asChild size="lg" className="w-full gap-2 shadow-lg shadow-indigo-300/50 sm:w-auto dark:shadow-none" sound="pop">
               <Link href="/plans/new">
                 <Plus className="h-4 w-4" />
                 New plan

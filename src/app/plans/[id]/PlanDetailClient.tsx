@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -40,21 +40,15 @@ export default function PlanDetailClient({ id }: { id: string }) {
   const { deletePlan, updatePlanStatus, updatePlan, regeneratePlanSchedule } = usePlans();
   const { updateBook } = useBooks();
   const { settings } = useSettings();
-  const [exportOpen, setExportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(() => searchParams.get("export") === "1");
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [celebrated, setCelebrated] = useState(false);
+  const celebratedRef = useRef(false);
   const [dismissedReexport, setDismissedReexport] = useState(false);
 
   const planMissing = details === null;
-
-  useEffect(() => {
-    if (searchParams.get("export") === "1") {
-      setExportOpen(true);
-    }
-  }, [searchParams]);
 
   const allComplete =
     details?.books.every((b) => b.currentPage >= b.totalPages) ?? false;
@@ -67,12 +61,12 @@ export default function PlanDetailClient({ id }: { id: string }) {
   }, [details, allComplete, planStatus, updatePlanStatus]);
 
   useEffect(() => {
-    if (allComplete && !celebrated && details) {
-      setCelebrated(true);
+    if (allComplete && !celebratedRef.current && details) {
+      celebratedRef.current = true;
       playSound("complete");
       fireConfetti("big");
     }
-  }, [allComplete, celebrated, details]);
+  }, [allComplete, details]);
 
   const needsReexport = useMemo(() => {
     if (!details || dismissedReexport) return false;
@@ -200,16 +194,16 @@ export default function PlanDetailClient({ id }: { id: string }) {
               <ArrowLeft className="h-4 w-4" />
               All plans
             </Link>
-            <h1 className="text-3xl font-bold">{plan.name}</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">{plan.name}</h1>
             <p className="mt-1 text-zinc-500">
               {formatDisplayDate(plan.startDate)} → {formatDisplayDate(plan.targetEndDate)} ·{" "}
               {plan.layoutMode}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
             <Button
               variant="outline"
-              className="gap-2"
+              className="shrink-0 gap-2"
               onClick={() => setAdjustOpen(true)}
               silent
             >
@@ -218,7 +212,7 @@ export default function PlanDetailClient({ id }: { id: string }) {
             </Button>
             <Button
               variant="outline"
-              className="gap-2"
+              className="shrink-0 gap-2"
               onClick={handleRecalculate}
               disabled={recalculating}
               silent
@@ -226,7 +220,7 @@ export default function PlanDetailClient({ id }: { id: string }) {
               <RefreshCw className={`h-4 w-4 ${recalculating ? "animate-spin" : ""}`} />
               Recalculate
             </Button>
-            <Button className="gap-2" sound="export" onClick={() => setExportOpen(true)}>
+            <Button className="shrink-0 gap-2" sound="export" onClick={() => setExportOpen(true)}>
               <Calendar className="h-4 w-4" />
               Export
             </Button>
@@ -333,8 +327,8 @@ export default function PlanDetailClient({ id }: { id: string }) {
                 <StaggerItem key={book.id}>
                   <Card>
                     <CardContent className="space-y-4 p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                        <div className="min-w-0">
                           <h3 className="font-semibold">{book.title}</h3>
                           <p className="text-sm text-zinc-500">{book.authors.join(", ")}</p>
                         </div>

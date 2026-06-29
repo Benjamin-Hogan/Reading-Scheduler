@@ -57,8 +57,8 @@ export function PageUpdateForm({ book, onUpdate }: PageUpdateFormProps) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-end gap-3">
-        <div className="space-y-1.5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="min-w-0 flex-1 space-y-1.5">
           <Label htmlFor={`page-${book.id}`}>Current page</Label>
           <Input
             id={`page-${book.id}`}
@@ -70,10 +70,11 @@ export function PageUpdateForm({ book, onUpdate }: PageUpdateFormProps) {
               setPage(e.target.value);
               setError(null);
             }}
-            className="w-28"
+            className="w-full sm:w-28"
+            inputMode="numeric"
           />
         </div>
-        <Button onClick={handleSave} disabled={saving} size="sm" sound="pageTurn" silent>
+        <Button onClick={handleSave} disabled={saving} size="sm" className="w-full sm:w-auto" sound="pageTurn" silent>
           {saving ? "Saving..." : "Update"}
         </Button>
       </div>

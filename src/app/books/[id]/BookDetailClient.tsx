@@ -121,8 +121,8 @@ export default function BookDetailClient({ id }: { id: string }) {
   return (
     <FadeIn>
       <div className="mx-auto max-w-2xl space-y-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <Link
               href="/books"
               className="mb-2 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700"
@@ -130,13 +130,13 @@ export default function BookDetailClient({ id }: { id: string }) {
               <ArrowLeft className="h-4 w-4" />
               Library
             </Link>
-            <h1 className="text-3xl font-bold">{book.title}</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">{book.title}</h1>
             {book.subtitle && (
               <p className="mt-1 text-lg text-zinc-600 dark:text-zinc-400">{book.subtitle}</p>
             )}
             <p className="mt-1 text-zinc-500">{book.authors.join(", ") || "Unknown author"}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2 self-start">
             {book.googleVolumeId && (
               <Button
                 variant="outline"
@@ -164,8 +164,8 @@ export default function BookDetailClient({ id }: { id: string }) {
           </div>
         </div>
 
-        <div className="flex gap-6">
-          <div className="relative h-48 w-32 shrink-0 overflow-hidden rounded-xl bg-zinc-100 shadow-md dark:bg-zinc-800">
+        <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+          <div className="relative mx-auto h-56 w-40 shrink-0 overflow-hidden rounded-xl bg-zinc-100 shadow-md sm:mx-0 sm:h-48 sm:w-32 dark:bg-zinc-800">
             {book.coverUrl ? (
               <Image src={book.coverUrl} alt={book.title} fill className="object-cover" unoptimized />
             ) : (
@@ -311,11 +311,11 @@ export default function BookDetailClient({ id }: { id: string }) {
           </CardContent>
         </Card>
 
-        <div className="flex gap-3">
-          <Button asChild>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/plans/new">Use in a reading plan</Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link href={`/books/${book.id}/edit`}>Edit book</Link>
           </Button>
         </div>

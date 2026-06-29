@@ -36,10 +36,10 @@ export default function BooksPage() {
     <FadeIn>
       <div className="space-y-6">
         <SlideUp>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold">Library</h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-2xl font-bold sm:text-3xl">Library</h1>
                 {!isLoading && (
                   <Badge variant="secondary" className="text-sm">
                     {books.length} book{books.length !== 1 ? "s" : ""}
@@ -48,7 +48,7 @@ export default function BooksPage() {
               </div>
               <p className="text-zinc-500">Add, edit, and manage books for your reading plans</p>
             </div>
-            <Button asChild className="gap-2" sound="pop">
+            <Button asChild className="w-full gap-2 sm:w-auto" sound="pop">
               <Link href="/books/new">
                 <Plus className="h-4 w-4" />
                 Add book

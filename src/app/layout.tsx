@@ -30,6 +30,7 @@ export const viewport: Viewport = {
   themeColor: "#4f46e5",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -47,7 +48,9 @@ export default function RootLayout({
         <AppProviders>
           <ServiceWorkerRegister />
           <AppNav />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-24 md:py-8 md:pb-8">
+            {children}
+          </main>
         </AppProviders>
       </body>
     </html>
