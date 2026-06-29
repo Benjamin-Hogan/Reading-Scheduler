@@ -9,6 +9,10 @@ import type {
   ReadingPlan,
   WeekdayKey,
 } from "@/lib/db/schema";
+import { recordDeletion } from "@/lib/db/tombstones";
+import { stampForWrite, stampPartial } from "@/lib/db/write-stamp";
+import { scheduleSyncPush } from "@/hooks/use-sync";
+import { getSyncState } from "@/lib/sync/engine";
 import {
   buildScheduleFromDate,
   getRegenerationStartDate,
@@ -57,24 +61,38 @@ export function usePlans() {
     planBooks: Omit<PlanBook, "id" | "planId">[];
     assignments: Omit<DailyAssignment, "id" | "planId">[];
   }) => {
+    const userId = getSyncState().userId;
     const planId = generateId();
-    const plan: ReadingPlan = {
-      ...data.plan,
-      id: planId,
-      createdAt: new Date().toISOString(),
-    };
+    const plan: ReadingPlan = stampForWrite(
+      {
+        ...data.plan,
+        id: planId,
+        createdAt: new Date().toISOString(),
+      },
+      userId
+    );
 
-    const planBooks: PlanBook[] = data.planBooks.map((pb) => ({
-      ...pb,
-      id: generateId(),
-      planId,
-    }));
+    const planBooks: PlanBook[] = data.planBooks.map((pb) =>
+      stampForWrite<PlanBook>(
+        {
+          ...pb,
+          id: generateId(),
+          planId,
+        },
+        userId
+      )
+    );
 
-    const assignments: DailyAssignment[] = data.assignments.map((a) => ({
-      ...a,
-      id: generateId(),
-      planId,
-    }));
+    const assignments: DailyAssignment[] = data.assignments.map((a) =>
+      stampForWrite<DailyAssignment>(
+        {
+          ...a,
+          id: generateId(),
+          planId,
+        },
+        userId
+      )
+    );
 
     await db.transaction("rw", [db.readingPlans, db.planBooks, db.dailyAssignments], async () => {
       await db.readingPlans.add(plan);
@@ -82,6 +100,7 @@ export function usePlans() {
       await db.dailyAssignments.bulkAdd(assignments);
     });
 
+    scheduleSyncPush();
     return planId;
   };
 
@@ -102,7 +121,8 @@ export function usePlans() {
       >
     >
   ) => {
-    await db.readingPlans.update(planId, updates);
+    await db.readingPlans.update(planId, stampPartial(updates, getSyncState().userId));
+    scheduleSyncPush();
   };
 
   const regeneratePlanSchedule = async (planId: string) => {
@@ -137,31 +157,53 @@ export function usePlans() {
       fromDate
     );
 
-    const newPlanBooks: PlanBook[] = schedule.windows.map((w, i) => ({
-      id: generateId(),
-      planId,
-      bookId: w.bookId,
-      sortOrder: i,
-      bookStartDate: w.startDate,
-      bookEndDate: w.endDate,
-    }));
+    const userId = getSyncState().userId;
+    const newPlanBooks: PlanBook[] = schedule.windows.map((w, i) =>
+      stampForWrite<PlanBook>(
+        {
+          id: generateId(),
+          planId,
+          bookId: w.bookId,
+          sortOrder: i,
+          bookStartDate: w.startDate,
+          bookEndDate: w.endDate,
+        },
+        userId
+      )
+    );
 
-    const newAssignments: DailyAssignment[] = schedule.assignments.map((a) => ({
-      id: generateId(),
-      planId,
-      bookId: a.bookId,
-      date: a.date,
-      startPage: a.startPage,
-      endPage: a.endPage,
-      pagesToRead: a.pagesToRead,
-    }));
+    const newAssignments: DailyAssignment[] = schedule.assignments.map((a) =>
+      stampForWrite<DailyAssignment>(
+        {
+          id: generateId(),
+          planId,
+          bookId: a.bookId,
+          date: a.date,
+          startPage: a.startPage,
+          endPage: a.endPage,
+          pagesToRead: a.pagesToRead,
+        },
+        userId
+      )
+    );
 
-    await db.transaction("rw", [db.planBooks, db.dailyAssignments], async () => {
+    const oldPlanBooks = await db.planBooks.where("planId").equals(planId).toArray();
+    const oldAssignments = await db.dailyAssignments.where("planId").equals(planId).toArray();
+
+    await db.transaction("rw", [db.planBooks, db.dailyAssignments, db.deletedRecords], async () => {
+      for (const pb of oldPlanBooks) {
+        await recordDeletion("planBooks", pb.id);
+      }
+      for (const a of oldAssignments) {
+        await recordDeletion("dailyAssignments", a.id);
+      }
       await db.planBooks.where("planId").equals(planId).delete();
       await db.dailyAssignments.where("planId").equals(planId).delete();
       await db.planBooks.bulkAdd(newPlanBooks);
       await db.dailyAssignments.bulkAdd(newAssignments);
     });
+
+    scheduleSyncPush();
 
     if (plan.calendarFeedToken) {
       await syncPlanCalendarFeed(planId);
@@ -180,15 +222,31 @@ export function usePlans() {
       }
     }
 
-    await db.transaction("rw", [db.readingPlans, db.planBooks, db.dailyAssignments], async () => {
-      await db.dailyAssignments.where("planId").equals(planId).delete();
-      await db.planBooks.where("planId").equals(planId).delete();
-      await db.readingPlans.delete(planId);
-    });
+    const planBooks = await db.planBooks.where("planId").equals(planId).toArray();
+    const assignments = await db.dailyAssignments.where("planId").equals(planId).toArray();
+
+    await db.transaction(
+      "rw",
+      [db.readingPlans, db.planBooks, db.dailyAssignments, db.deletedRecords],
+      async () => {
+        for (const a of assignments) {
+          await recordDeletion("dailyAssignments", a.id);
+        }
+        for (const pb of planBooks) {
+          await recordDeletion("planBooks", pb.id);
+        }
+        await recordDeletion("readingPlans", planId);
+        await db.dailyAssignments.where("planId").equals(planId).delete();
+        await db.planBooks.where("planId").equals(planId).delete();
+        await db.readingPlans.delete(planId);
+      }
+    );
+    scheduleSyncPush();
   };
 
   const updatePlanStatus = async (planId: string, status: ReadingPlan["status"]) => {
-    await db.readingPlans.update(planId, { status });
+    await db.readingPlans.update(planId, stampPartial({ status }, getSyncState().userId));
+    scheduleSyncPush();
   };
 
   return {

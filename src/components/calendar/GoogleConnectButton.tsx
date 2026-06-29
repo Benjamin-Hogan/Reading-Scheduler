@@ -8,17 +8,21 @@ interface GoogleConnectButtonProps {
   returnTo?: string;
   connected?: boolean;
   onDisconnect?: () => void;
+  label?: string;
+  connectedLabel?: string;
 }
 
 export function GoogleConnectButton({
   returnTo = "/settings",
   connected,
   onDisconnect,
+  label = "Connect Google Calendar",
+  connectedLabel = "Connected to Google Calendar",
 }: GoogleConnectButtonProps) {
   if (connected) {
     return (
       <div className="flex items-center gap-3">
-        <span className="text-sm text-emerald-600">Connected to Google Calendar</span>
+        <span className="text-sm text-emerald-600">{connectedLabel}</span>
         <Button variant="outline" size="sm" onClick={onDisconnect}>
           Disconnect
         </Button>
@@ -30,7 +34,7 @@ export function GoogleConnectButton({
     <Button asChild variant="outline" className="gap-2">
       <Link href={`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`}>
         <Calendar className="h-4 w-4" />
-        Connect Google Calendar
+        {label}
       </Link>
     </Button>
   );

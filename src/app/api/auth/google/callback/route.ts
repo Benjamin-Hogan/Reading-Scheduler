@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import {
+  signUserSession,
+  userSessionCookieOptions,
+  USER_SESSION_COOKIE,
+} from "@/lib/auth/session";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -52,6 +57,27 @@ export async function GET(request: NextRequest) {
     expires_in: number;
   };
 
+  const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+
+  if (!userInfoRes.ok) {
+    return NextResponse.redirect(
+      new URL("/settings?google_error=userinfo_failed", request.url)
+    );
+  }
+
+  const userInfo = (await userInfoRes.json()) as {
+    sub: string;
+    email?: string;
+  };
+
+  if (!userInfo.sub || !userInfo.email) {
+    return NextResponse.redirect(
+      new URL("/settings?google_error=missing_profile", request.url)
+    );
+  }
+
   const cookieStore = await cookies();
   cookieStore.set("google_access_token", tokens.access_token, {
     httpOnly: true,
@@ -70,6 +96,13 @@ export async function GET(request: NextRequest) {
       path: "/",
     });
   }
+
+  const sessionToken = signUserSession({
+    userId: userInfo.sub,
+    email: userInfo.email,
+    issuedAt: Date.now(),
+  });
+  cookieStore.set(USER_SESSION_COOKIE, sessionToken, userSessionCookieOptions());
 
   return NextResponse.redirect(new URL(`${state}?google_connected=1`, request.url));
 }
