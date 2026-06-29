@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { formatDate } from "@/lib/utils";
@@ -201,9 +202,9 @@ export function ScheduleWizard({ libraryBooks }: ScheduleWizardProps) {
             {libraryBooks.length === 0 ? (
               <p className="text-zinc-500">
                 No books in your library yet.{" "}
-                <a href="/books/new" className="text-indigo-600 underline">
+                <Link href="/books/new" className="text-indigo-600 underline">
                   Add some first
-                </a>
+                </Link>
               </p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">

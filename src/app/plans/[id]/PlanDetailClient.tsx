@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -40,21 +40,15 @@ export default function PlanDetailClient({ id }: { id: string }) {
   const { deletePlan, updatePlanStatus, updatePlan, regeneratePlanSchedule } = usePlans();
   const { updateBook } = useBooks();
   const { settings } = useSettings();
-  const [exportOpen, setExportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(() => searchParams.get("export") === "1");
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [celebrated, setCelebrated] = useState(false);
+  const celebratedRef = useRef(false);
   const [dismissedReexport, setDismissedReexport] = useState(false);
 
   const planMissing = details === null;
-
-  useEffect(() => {
-    if (searchParams.get("export") === "1") {
-      setExportOpen(true);
-    }
-  }, [searchParams]);
 
   const allComplete =
     details?.books.every((b) => b.currentPage >= b.totalPages) ?? false;
@@ -67,12 +61,12 @@ export default function PlanDetailClient({ id }: { id: string }) {
   }, [details, allComplete, planStatus, updatePlanStatus]);
 
   useEffect(() => {
-    if (allComplete && !celebrated && details) {
-      setCelebrated(true);
+    if (allComplete && !celebratedRef.current && details) {
+      celebratedRef.current = true;
       playSound("complete");
       fireConfetti("big");
     }
-  }, [allComplete, celebrated, details]);
+  }, [allComplete, details]);
 
   const needsReexport = useMemo(() => {
     if (!details || dismissedReexport) return false;
