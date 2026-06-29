@@ -21,9 +21,9 @@ ENV FEED_DATA_DIR=/data/feeds
 ENV SYNC_DATA_DIR=/data/sync
 
 RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nextjs \
+  && adduser --system --uid 1001 -G nodejs nextjs \
   && mkdir -p /data/feeds /data/sync \
-  && chown -R nodejs:nodejs /data/feeds /data/sync
+  && chown -R nextjs:nodejs /data/feeds /data/sync
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
