@@ -408,15 +408,6 @@ export default function SettingsPage() {
                       />
                     </>
                   )}
-                  {showLocalhostHint && !signedIn && (
-                    <p className="text-xs text-amber-700 dark:text-amber-300">
-                      For Google sign-in, use{" "}
-                      <a href="http://localhost:3000/settings" className="underline">
-                        http://localhost:3000
-                      </a>{" "}
-                      — OAuth is registered for localhost, not your network IP.
-                    </p>
-                  )}
                 </CardContent>
               </Card>
 

@@ -10,10 +10,12 @@ services:
     environment:
       NODE_ENV: production
       FEED_DATA_DIR: /data/feeds
+      SYNC_DATA_DIR: /data/sync
       HOSTNAME: 0.0.0.0
       PORT: 3000
     volumes:
       - feed-data:/data/feeds
+      - sync-data:/data/sync
     healthcheck:
       test:
         [
@@ -29,3 +31,4 @@ services:
 
 volumes:
   feed-data:
+  sync-data:
