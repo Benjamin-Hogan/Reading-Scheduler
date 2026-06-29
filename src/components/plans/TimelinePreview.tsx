@@ -42,7 +42,7 @@ export function TimelinePreview({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span>Schedule preview</span>
           {!feasibility.feasible && (
             <Badge variant="warning">Needs adjustment</Badge>
@@ -86,7 +86,7 @@ export function TimelinePreview({
 
             return (
               <div key={seg.bookId} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                   <span className="font-medium">{seg.title}</span>
                   <span className="text-zinc-500">{seg.pagesPerDay} pp/day</span>
                 </div>

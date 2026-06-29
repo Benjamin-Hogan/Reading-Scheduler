@@ -20,21 +20,21 @@ export function ReadingStatsCard() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-3 gap-2 text-center sm:gap-4">
           <div>
-            <p className="text-2xl font-bold text-indigo-600">
+            <p className="text-xl font-bold text-indigo-600 sm:text-2xl">
               <AnimatedNumber value={stats.pagesThisWeek} />
             </p>
             <p className="text-xs text-zinc-500">Pages this week</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-indigo-600">
+            <p className="text-xl font-bold text-indigo-600 sm:text-2xl">
               <AnimatedNumber value={stats.booksFinished} />
             </p>
             <p className="text-xs text-zinc-500">Books finished</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-indigo-600">
+            <p className="text-xl font-bold text-indigo-600 sm:text-2xl">
               <AnimatedNumber value={stats.activePlans} />
             </p>
             <p className="text-xs text-zinc-500">Active plans</p>

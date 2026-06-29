@@ -20,6 +20,7 @@ Plan multi-book reading schedules and live from your calendar — not a daily ha
 - **Past plans** — browse active, completed, and archived plans
 - **Local storage** — data stays in your browser (JSON export/import for backup)
 - **Polished UI** — animated backgrounds, spring transitions, confetti celebrations, and optional sound effects with volume control (Settings → Experience)
+- **Mobile-friendly** — bottom tab navigation, touch-friendly controls, safe-area support, and bottom-sheet dialogs on small screens
 
 ## Workflow
 
@@ -95,4 +96,4 @@ See [docs/architecture.md](docs/architecture.md) for how client storage, the sch
 
 ## PWA
 
-The app includes a web manifest and icons in `public/icons/` for installability. The service worker is **disabled in development** so it does not cache Next.js dev chunks. If the app shows a blank screen after an update, hard-refresh (`Ctrl+Shift+R`) or clear site data for localhost in your browser.
+The app includes a web manifest and icons in `public/icons/` for installability. On phones, install it to your home screen for a native-like experience with bottom tab navigation. The service worker is **disabled in development** so it does not cache Next.js dev chunks. If the app shows a blank screen after an update, hard-refresh (`Ctrl+Shift+R`) or clear site data for localhost in your browser.

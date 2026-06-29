@@ -92,12 +92,12 @@ export default function NewBookPage() {
   return (
     <FadeIn>
       <div className="mx-auto max-w-2xl space-y-8">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Add a book</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">Add a book</h1>
             <p className="text-zinc-500">Search Google Books or enter details manually</p>
           </div>
-          <Button variant="outline" size="sm" asChild className="gap-1.5">
+          <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
             <Link href="/books">
               <Library className="h-4 w-4" />
               Library ({books.length})

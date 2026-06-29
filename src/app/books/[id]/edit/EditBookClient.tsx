@@ -41,7 +41,7 @@ export default function EditBookClient({ id }: { id: string }) {
             <ArrowLeft className="h-4 w-4" />
             Back to book
           </Link>
-          <h1 className="text-3xl font-bold">Edit book</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Edit book</h1>
           <p className="text-zinc-500">Update details, notes, and metadata</p>
         </div>
         <ManualBookForm

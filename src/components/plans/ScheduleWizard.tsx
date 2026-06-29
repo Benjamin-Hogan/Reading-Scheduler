@@ -375,21 +375,23 @@ export function ScheduleWizard({ libraryBooks }: ScheduleWizardProps) {
         )}
       </StepTransition>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={goBack} disabled={step === 0} silent>
-          <ChevronLeft className="h-4 w-4" />
-          Back
-        </Button>
-        {step < 4 ? (
-          <Button onClick={goNext} disabled={!canNext()} silent>
-            Next
-            <ChevronRight className="h-4 w-4" />
+      <div className="sticky bottom-20 z-30 -mx-4 border-t border-zinc-200 bg-[var(--background)]/95 px-4 py-3 backdrop-blur-sm md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none dark:border-zinc-800">
+        <div className="flex justify-between gap-3">
+          <Button variant="outline" onClick={goBack} disabled={step === 0} silent className="min-h-11 flex-1 sm:flex-none">
+            <ChevronLeft className="h-4 w-4" />
+            Back
           </Button>
-        ) : (
-          <Button onClick={handleSave} disabled={saving || !schedule} silent>
-            {saving ? "Saving..." : "Create plan"}
-          </Button>
-        )}
+          {step < 4 ? (
+            <Button onClick={goNext} disabled={!canNext()} silent className="min-h-11 flex-1 sm:flex-none">
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleSave} disabled={saving || !schedule} silent className="min-h-11 flex-1 sm:flex-none">
+              {saving ? "Saving..." : "Create plan"}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
