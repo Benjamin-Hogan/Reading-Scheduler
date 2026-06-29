@@ -10,9 +10,13 @@ CI publishes `ghcr.io/benjamin-hogan/reading-scheduler` on every push to `master
 
 ```bash
 cp .env.example .env
-# Edit .env — add Google API credentials (see docs/google-cloud-setup.md)
+cp .env.local.example .env.local
+# Fill .env.local with Google API credentials (see docs/google-cloud-setup.md)
+npm run docker:prepare
 docker compose -f docker-compose.ghcr.yml up -d
 ```
+
+Compose loads `.env` (host `PORT`, `SESSION_SECRET`) then `.env.local` (Google credentials). Run `npm run docker:prepare` to generate `SESSION_SECRET` and verify what is set.
 
 Or pull directly:
 
@@ -36,7 +40,9 @@ To make the package public (anonymous pulls): GitHub → **Packages** → **read
 git clone https://github.com/Benjamin-Hogan/Reading-Scheduler.git
 cd Reading-Scheduler
 cp .env.example .env
-# Edit .env — add Google API credentials (see docs/google-cloud-setup.md)
+cp .env.local.example .env.local
+# Fill .env.local with Google API credentials (see docs/google-cloud-setup.md)
+npm run docker:prepare
 docker compose up -d --build
 ```
 
@@ -55,7 +61,7 @@ There is no server-side database. Back up library data via **Settings → Export
 
 ## Environment variables
 
-Copy `.env.example` to `.env`:
+Copy `.env.example` to `.env` and `.env.local.example` to `.env.local`, then run `npm run docker:prepare`:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
