@@ -14,6 +14,7 @@ import {
   getRegenerationStartDate,
 } from "@/lib/scheduler";
 import { generateId } from "@/lib/utils";
+import { syncPlanCalendarFeed, revokeCalendarFeed } from "@/lib/calendar/feed-client";
 
 export interface PlanWithDetails {
   plan: ReadingPlan;
@@ -97,6 +98,7 @@ export function usePlans() {
         | "preferredReadTime"
         | "pagesPerDayOverride"
         | "status"
+        | "calendarFeedToken"
       >
     >
   ) => {
@@ -161,10 +163,23 @@ export function usePlans() {
       await db.dailyAssignments.bulkAdd(newAssignments);
     });
 
+    if (plan.calendarFeedToken) {
+      await syncPlanCalendarFeed(planId);
+    }
+
     return schedule;
   };
 
   const deletePlan = async (planId: string) => {
+    const plan = await db.readingPlans.get(planId);
+    if (plan?.calendarFeedToken) {
+      try {
+        await revokeCalendarFeed(plan.calendarFeedToken);
+      } catch {
+        // Plan deletion should proceed even if feed revoke fails.
+      }
+    }
+
     await db.transaction("rw", [db.readingPlans, db.planBooks, db.dailyAssignments], async () => {
       await db.dailyAssignments.where("planId").equals(planId).delete();
       await db.planBooks.where("planId").equals(planId).delete();

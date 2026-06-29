@@ -55,6 +55,8 @@ export interface ReadingPlan extends SyncFields {
   preferredReadTime: string;
   pagesPerDayOverride?: number | null;
   status: PlanStatus;
+  /** Server token for the live ICS subscription feed, if published. */
+  calendarFeedToken?: string | null;
   createdAt: string;
 }
 
