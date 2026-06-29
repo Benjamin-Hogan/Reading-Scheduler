@@ -4,6 +4,34 @@ Reading Scheduler is designed to run as a **single container** on your own hardw
 
 ## Quick start
 
+### Pull from GitHub Container Registry (recommended)
+
+CI publishes `ghcr.io/benjamin-hogan/reading-scheduler` on every push to `master`:
+
+```bash
+cp .env.example .env
+# Edit .env — add Google API credentials (see docs/google-cloud-setup.md)
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+Or pull directly:
+
+```bash
+docker pull ghcr.io/benjamin-hogan/reading-scheduler:latest
+```
+
+**Private repository:** authenticate before pulling:
+
+```bash
+echo "$CR_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+Use a [personal access token](https://github.com/settings/tokens) with `read:packages`, or `gh auth token` if you use the GitHub CLI.
+
+To make the package public (anonymous pulls): GitHub → **Packages** → **reading-scheduler** → **Package settings** → **Change visibility**.
+
+### Build locally
+
 ```bash
 git clone https://github.com/Benjamin-Hogan/Reading-Scheduler.git
 cd Reading-Scheduler
@@ -111,6 +139,15 @@ docker run -d \
 ```
 
 ## Updates
+
+### Using GHCR image
+
+```bash
+docker compose -f docker-compose.ghcr.yml pull
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+### Building from source
 
 ```bash
 git pull
