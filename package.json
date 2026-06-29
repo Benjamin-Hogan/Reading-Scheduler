@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:mobile": "next dev --hostname 0.0.0.0",
+    "tunnel": "npx localtunnel --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRedirectUri, isGoogleOAuthConfigured } from "@/lib/google/oauth";
 
 const SCOPES = [
   "openid",
@@ -7,18 +8,11 @@ const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
 ];
 
-function getRedirectUri(request: NextRequest): string {
-  if (process.env.GOOGLE_REDIRECT_URI) {
-    return process.env.GOOGLE_REDIRECT_URI;
-  }
-  return `${request.nextUrl.origin}/api/auth/google/callback`;
-}
-
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = getRedirectUri(request);
 
-  if (!clientId) {
+  if (!clientId || !isGoogleOAuthConfigured()) {
     return NextResponse.json(
       { error: "Google OAuth is not configured" },
       { status: 500 }

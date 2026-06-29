@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import {
   signUserSession,
-  userSessionCookieOptions,
   USER_SESSION_COOKIE,
 } from "@/lib/auth/session";
+import {
+  getGoogleAuthCookieOptions,
+  getRedirectUri,
+  isGoogleOAuthConfigured,
+  shouldUseSecureCookies,
+} from "@/lib/google/oauth";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -23,11 +28,9 @@ export async function GET(request: NextRequest) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri =
-    process.env.GOOGLE_REDIRECT_URI ??
-    `${request.nextUrl.origin}/api/auth/google/callback`;
+  const redirectUri = getRedirectUri(request);
 
-  if (!clientId || !clientSecret) {
+  if (!clientId || !clientSecret || !isGoogleOAuthConfigured()) {
     return NextResponse.redirect(
       new URL("/settings?google_error=not_configured", request.url)
     );
@@ -79,22 +82,18 @@ export async function GET(request: NextRequest) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set("google_access_token", tokens.access_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: tokens.expires_in,
-    path: "/",
-  });
+  cookieStore.set(
+    "google_access_token",
+    tokens.access_token,
+    getGoogleAuthCookieOptions(request, tokens.expires_in)
+  );
 
   if (tokens.refresh_token) {
-    cookieStore.set("google_refresh_token", tokens.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 365,
-      path: "/",
-    });
+    cookieStore.set(
+      "google_refresh_token",
+      tokens.refresh_token,
+      getGoogleAuthCookieOptions(request, 60 * 60 * 24 * 365)
+    );
   }
 
   const sessionToken = signUserSession({
@@ -102,7 +101,13 @@ export async function GET(request: NextRequest) {
     email: userInfo.email,
     issuedAt: Date.now(),
   });
-  cookieStore.set(USER_SESSION_COOKIE, sessionToken, userSessionCookieOptions());
+  cookieStore.set(USER_SESSION_COOKIE, sessionToken, {
+    httpOnly: true,
+    secure: shouldUseSecureCookies(request),
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+    path: "/",
+  });
 
   return NextResponse.redirect(new URL(`${state}?google_connected=1`, request.url));
 }
