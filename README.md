@@ -107,26 +107,48 @@ For phone (LAN or tunnel), add those URLs too — see the setup guide and the UR
 
 ```bash
 npm run dev         # Development server
+npm run dev:mobile  # Dev server on all interfaces
+npm run tunnel      # localtunnel for remote phone testing
 npm run build       # Production build
+npm run start       # Production server (after build)
 npm run test        # Run unit tests
 npm run test:watch  # Run tests in watch mode
 npm run typecheck   # TypeScript check
 npm run lint        # ESLint
 ```
 
+## CI / container registry
+
+On push to `master` and version tags (`v*`), GitHub Actions:
+
+- **CI** — typecheck, lint, test, Next.js build
+- **Docker** — build and push to `ghcr.io/benjamin-hogan/reading-scheduler`
+
+PRs run a Docker build (no push) to verify the image builds.
+
 ## Deployment
 
 ### Self-hosted (Docker) — recommended
 
-Run on your own server, NAS, or homelab:
+Run on your own server, NAS, or homelab.
+
+**Pull the published image** (built by CI on every push to `master`):
 
 ```bash
 cp .env.example .env
 # Add Google credentials and SESSION_SECRET — see docs/self-hosting.md
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+Image: `ghcr.io/benjamin-hogan/reading-scheduler:latest`
+
+**Or build locally:**
+
+```bash
 docker compose up -d --build
 ```
 
-Full guide: **[docs/self-hosting.md](docs/self-hosting.md)** (GHCR pull, reverse proxy, HTTPS, volumes).
+Full guide: **[docs/self-hosting.md](docs/self-hosting.md)** (GHCR auth, reverse proxy, HTTPS, volumes).
 
 The image uses Next.js **standalone** output. ICS feeds and cloud sync persist in Docker volumes (`feed-data`, `sync-data`). Local IndexedDB remains the offline cache — use Settings → Export JSON for manual backups.
 
