@@ -116,14 +116,29 @@ npm run lint        # ESLint
 
 ## Deployment
 
-The app deploys cleanly to [Vercel](https://vercel.com/) or any Node.js host that supports Next.js 16.
+### Self-hosted (Docker) — recommended
 
-1. Connect your repository and set the build command to `npm run build`
-2. Add the environment variables from the table above in your hosting dashboard
+Run on your own server, NAS, or homelab:
+
+```bash
+cp .env.example .env
+# Add Google credentials and SESSION_SECRET — see docs/self-hosting.md
+docker compose up -d --build
+```
+
+Full guide: **[docs/self-hosting.md](docs/self-hosting.md)** (GHCR pull, reverse proxy, HTTPS, volumes).
+
+The image uses Next.js **standalone** output. ICS feeds and cloud sync persist in Docker volumes (`feed-data`, `sync-data`). Local IndexedDB remains the offline cache — use Settings → Export JSON for manual backups.
+
+### Vercel / managed Node
+
+The app also deploys to [Vercel](https://vercel.com/) or any Node.js host:
+
+1. Set build command to `npm run build` and start command to `npm run start`
+2. Add environment variables from the table above
 3. Set `SESSION_SECRET` to a long random string in production
-4. For durable cloud sync and calendar feeds on Vercel, configure `SYNC_DATA_DIR` and `FEED_DATA_DIR` to a persistent volume (defaults under `/tmp` are ephemeral on serverless)
-5. For Google OAuth in production, add your production domain to authorized origins and redirect URIs in Google Cloud Console
-6. PWA icons live in `public/icons/`; the service worker caches the manifest and icons for installability
+4. For durable cloud sync and calendar feeds, configure `SYNC_DATA_DIR` and `FEED_DATA_DIR` to persistent storage
+5. Register your production domain in Google Cloud Console for OAuth
 
 See [docs/architecture.md](docs/architecture.md) for how client storage, the scheduler, and calendar export fit together.
 

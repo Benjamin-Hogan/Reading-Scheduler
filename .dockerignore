@@ -1,0 +1,29 @@
+# dependencies
+node_modules
+npm-debug.log*
+
+# build output
+.next
+out
+build
+coverage
+
+# git / IDE
+.git
+.gitignore
+.cursor
+*.md
+!README.md
+
+# env (inject at runtime via compose or -e)
+.env
+.env.*
+!.env.example
+
+# local feed snapshots
+.feed-data
+
+# misc
+.DS_Store
+.vercel
+*.pem
