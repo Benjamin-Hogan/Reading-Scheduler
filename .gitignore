@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# calendar feed snapshots (local dev / self-hosted)
+.feed-data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

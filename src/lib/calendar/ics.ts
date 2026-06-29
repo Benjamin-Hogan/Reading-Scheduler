@@ -41,9 +41,24 @@ export function buildIcsEvents(options: IcsExportOptions): EventAttributes[] {
   return events;
 }
 
-export async function generateIcsFile(options: IcsExportOptions): Promise<string> {
-  const events = buildIcsEvents(options);
-  const { error, value } = createEvents(events);
+export interface IcsFeedOptions extends IcsExportOptions {
+  calName?: string;
+  sequence?: number;
+}
+
+export async function generateIcsFile(
+  options: IcsExportOptions | IcsFeedOptions
+): Promise<string> {
+  const feedOptions = options as IcsFeedOptions;
+  const events = buildIcsEvents(options).map((event) =>
+    feedOptions.sequence !== undefined
+      ? { ...event, sequence: feedOptions.sequence }
+      : event
+  );
+  const { error, value } = createEvents(events, {
+    calName: feedOptions.calName,
+    productId: "reading-scheduler//EN",
+  });
   if (error || !value) {
     throw error ?? new Error("Failed to generate ICS file");
   }

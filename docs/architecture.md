@@ -33,9 +33,10 @@ Pure TypeScript under `src/lib/scheduler/`:
 
 ## Calendar export
 
-- **ICS** — generated client-side (`src/lib/calendar/ics.ts`).
+- **ICS download** — generated client-side (`src/lib/calendar/ics.ts`).
 - **Google Calendar** — client sends assignments to `POST /api/calendar/export`; server upserts events using stable `iCalUID` values (`src/lib/calendar/events.ts`) so re-export updates existing events instead of duplicating them.
-- **Deletion** — `POST /api/calendar/delete` removes events by `iCalUID` when a plan is deleted with the calendar cleanup option.
+- **Subscription feed** — `POST /api/calendar/feed` stores a plan snapshot server-side and returns a subscribe URL. `GET /api/calendar/feed/[token]` serves a live `.ics` document with `X-PUBLISHED-TTL:PT1H` so calendar apps can refresh. Re-publishing (or recalculating a plan with an existing feed token) bumps event `SEQUENCE` numbers for the same stable UIDs. Feed snapshots persist under `FEED_DATA_DIR` (see README).
+- **Deletion** — `POST /api/calendar/delete` removes events by `iCalUID` when a plan is deleted with the calendar cleanup option. Published feeds are revoked when a plan with a feed token is deleted.
 
 ## Key entities
 

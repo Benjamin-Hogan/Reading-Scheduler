@@ -14,6 +14,7 @@ Plan multi-book reading schedules and live from your calendar — not a daily ha
 - **Today's reading** — see today's assignments when you visit
 - **Schedule recalculation** — rebuild assignments from current progress
 - **Calendar export** — download `.ics` or push to Google Calendar
+- **Calendar subscription feed** — publish a live `.ics` URL that updates when you recalculate the plan
 - **Calendar cleanup** — optionally remove Google Calendar events when deleting a plan
 - **Light progress tracking** — update your current page when you visit
 - **Reading stats** — pages this week, books finished, active plans
@@ -49,6 +50,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `GOOGLE_CLIENT_ID` | For Calendar export | OAuth 2.0 Web client ID |
 | `GOOGLE_CLIENT_SECRET` | For Calendar export | OAuth 2.0 client secret |
 | `GOOGLE_REDIRECT_URI` | For Calendar export | Default: `http://localhost:3000/api/auth/google/callback` |
+| `FEED_DATA_DIR` | For calendar subscription feeds | Directory for persisted feed snapshots (default: `.feed-data` locally, `/tmp/reading-scheduler-feeds` on Vercel) |
 
 ### Google Cloud Setup
 
