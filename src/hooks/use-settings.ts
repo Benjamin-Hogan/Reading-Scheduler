@@ -6,6 +6,9 @@ import { db } from "@/lib/db";
 import type { AppSettings } from "@/lib/db/schema";
 import { DEFAULT_ACTIVE_DAYS } from "@/lib/db/schema";
 import { isStorageAvailable } from "@/lib/db/storage";
+import { stampForWrite } from "@/lib/db/write-stamp";
+import { scheduleSyncPush } from "@/hooks/use-sync";
+import { getSyncState } from "@/lib/sync/engine";
 
 const DEFAULT_SETTINGS: AppSettings = {
   id: "default",
@@ -24,10 +27,15 @@ function browserTimezone(): string {
 async function ensureDefaultSettings(): Promise<void> {
   const existing = await db.settings.get("default");
   if (!existing) {
-    await db.settings.put({
-      ...DEFAULT_SETTINGS,
-      timezone: browserTimezone(),
-    });
+    await db.settings.put(
+      stampForWrite(
+        {
+          ...DEFAULT_SETTINGS,
+          timezone: browserTimezone(),
+        },
+        getSyncState().userId
+      )
+    );
   }
 }
 
@@ -57,7 +65,10 @@ export function useSettings() {
         ...DEFAULT_SETTINGS,
         timezone: browserTimezone(),
       };
-      await db.settings.put({ ...current, ...updates, id: "default" });
+      await db.settings.put(
+        stampForWrite({ ...current, ...updates, id: "default" }, getSyncState().userId)
+      );
+      scheduleSyncPush();
       setError(null);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to save settings";

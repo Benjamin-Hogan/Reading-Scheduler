@@ -1,6 +1,6 @@
 # Architecture
 
-Reading Scheduler is a **client-first** Next.js application. Books, plans, and daily assignments live in the browser via IndexedDB (Dexie). The server only proxies Google Books search and handles Google Calendar OAuth/export.
+Reading Scheduler is a **client-first** Next.js application. Books, plans, and daily assignments live in the browser via IndexedDB (Dexie) and sync to the server when signed in with Google.
 
 ## Data flow
 
@@ -8,19 +8,34 @@ Reading Scheduler is a **client-first** Next.js application. Books, plans, and d
 flowchart TB
   UI[React pages and components]
   Hooks[use-books / use-plans / use-settings]
+  SyncEngine[sync engine]
   Dexie[(IndexedDB via Dexie)]
   API[Next.js API routes]
+  SyncStore[(Sync store)]
   Google[Google Books and Calendar APIs]
 
   UI --> Hooks
   Hooks --> Dexie
+  Hooks --> SyncEngine
+  SyncEngine --> Dexie
+  SyncEngine --> API
   UI --> API
+  API --> SyncStore
   API --> Google
 ```
 
 - **No server actions** — all CRUD goes through client hooks into Dexie.
 - **Reactive reads** — `useLiveQuery` keeps UI in sync with IndexedDB.
 - **Atomic writes** — plan saves and regenerations use Dexie transactions.
+- **Cloud sync** — signed-in users push/pull via `/api/sync`; conflicts resolve per record by newest `updatedAt`.
+
+## Cloud sync
+
+- **Sign-in** — Google OAuth (`openid email profile`) creates a signed `user_session` cookie alongside existing Calendar tokens.
+- **Local-first** — IndexedDB remains the offline cache; changes debounce-push to the server after writes.
+- **Pull** — on app load, tab focus, and manual “Sync now” in Settings.
+- **Merge** — `src/lib/sync/merge.ts` merges bundles by record id; tombstones track deletions.
+- **Storage** — per-user JSON snapshots under `SYNC_DATA_DIR` (see README).
 
 ## Scheduler pipeline
 
@@ -47,7 +62,8 @@ Pure TypeScript under `src/lib/scheduler/`:
 | `PlanBook` | Join table with per-book schedule windows |
 | `DailyAssignment` | One reading session: date, page range |
 | `AppSettings` | Defaults, timezone, sound prefs, plan templates |
+| `DeletedRecord` | Local tombstone for sync deletes |
 
 ## Backup and restore
 
-`exportData` / `importData` in `src/lib/db/export-import.ts` produce versioned JSON bundles. Import supports **merge** (default) or **replace** strategies.
+`exportData` / `importData` in `src/lib/db/export-import.ts` produce versioned JSON bundles. Import supports **merge** (default) or **replace** strategies. Cloud sync reuses the same bundle format.

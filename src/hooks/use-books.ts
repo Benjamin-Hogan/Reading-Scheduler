@@ -4,6 +4,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { Book } from "@/lib/db/schema";
 import { isStorageAvailable } from "@/lib/db/storage";
+import { recordDeletion } from "@/lib/db/tombstones";
+import { stampForWrite, stampPartial } from "@/lib/db/write-stamp";
+import { scheduleSyncPush } from "@/hooks/use-sync";
+import { getSyncState } from "@/lib/sync/engine";
 import { generateId } from "@/lib/utils";
 
 import { fetchGoogleBookMetadata } from "@/lib/books/client";
@@ -48,14 +52,18 @@ export function useBooks() {
         throw new Error(`"${existing.title}" is already in your library`);
       }
     }
-    const book: Book = {
-      id: generateId(),
-      currentPage: data.currentPage ?? 0,
-      status: data.status ?? "want-to-read",
-      createdAt: new Date().toISOString(),
-      ...data,
-    };
+    const book: Book = stampForWrite(
+      {
+        id: generateId(),
+        currentPage: data.currentPage ?? 0,
+        status: data.status ?? "want-to-read",
+        createdAt: new Date().toISOString(),
+        ...data,
+      },
+      getSyncState().userId
+    );
     await db.books.add(book);
+    scheduleSyncPush();
     return book;
   };
 
@@ -63,7 +71,8 @@ export function useBooks() {
     if (!isStorageAvailable()) {
       throw new Error("Storage unavailable — open http://localhost:3000");
     }
-    await db.books.update(id, updates);
+    await db.books.update(id, stampPartial(updates, getSyncState().userId));
+    scheduleSyncPush();
     return db.books.get(id);
   };
 
@@ -77,7 +86,9 @@ export function useBooks() {
         `This book is used in ${planCount} plan(s). Remove it from those plans before deleting.`
       );
     }
+    await recordDeletion("books", id);
     await db.books.delete(id);
+    scheduleSyncPush();
   };
 
   const refreshGoogleMetadata = async (id: string) => {
@@ -93,7 +104,8 @@ export function useBooks() {
     if (meta.pageCount && meta.pageCount > 0) {
       Object.assign(updates, { totalPages: meta.pageCount });
     }
-    await db.books.update(id, updates);
+    await db.books.update(id, stampPartial(updates, getSyncState().userId));
+    scheduleSyncPush();
     return db.books.get(id);
   };
 

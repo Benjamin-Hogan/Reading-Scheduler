@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, Cloud } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
+import { useSync } from "@/hooks/use-sync";
 import { exportData, importData, downloadJson } from "@/lib/db/export-import";
 import { DEFAULT_ACTIVE_DAYS, WEEKDAYS, type WeekdayKey, type PlanTemplate } from "@/lib/db/schema";
 import { generateId } from "@/lib/utils";
@@ -21,13 +22,25 @@ import { Volume2, VolumeX } from "lucide-react";
 
 export default function SettingsPage() {
   const { settings, isLoading, updateSettings, error: settingsError } = useSettings();
+  const {
+    signedIn,
+    email,
+    status: syncStatus,
+    lastSyncedAt,
+    error: syncError,
+    syncNow,
+    uploadLocalToCloud,
+    refreshSession,
+  } = useSync();
   const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
   const [googleConnected, setGoogleConnected] = useState(
     () => !!searchParams.get("google_connected")
   );
   const [message, setMessage] = useState<string | null>(() =>
-    searchParams.get("google_connected") ? "Google Calendar connected successfully" : null
+    searchParams.get("google_connected")
+      ? "Google account connected — calendar and cloud sync are enabled"
+      : null
   );
   const [actionError, setActionError] = useState<string | null>(() => {
     const err = searchParams.get("google_error");
@@ -48,7 +61,14 @@ export default function SettingsPage() {
         if (data.connected) setGoogleConnected(true);
       })
       .catch(() => {});
-  }, []);
+    void refreshSession();
+  }, [refreshSession]);
+
+  useEffect(() => {
+    if (searchParams.get("google_connected")) {
+      void syncNow();
+    }
+  }, [searchParams, syncNow]);
 
   const toggleDay = async (day: WeekdayKey) => {
     const days = settings.defaultActiveDays as WeekdayKey[];
@@ -94,11 +114,35 @@ export default function SettingsPage() {
   const handleDisconnect = async () => {
     setActionError(null);
     try {
-      await fetch("/api/calendar/export", { method: "DELETE" });
+      await Promise.all([
+        fetch("/api/calendar/export", { method: "DELETE" }),
+        fetch("/api/auth/session", { method: "DELETE" }),
+      ]);
       setGoogleConnected(false);
-      setMessage("Disconnected from Google Calendar");
+      await refreshSession();
+      setMessage("Disconnected from Google");
     } catch {
       setActionError("Failed to disconnect");
+    }
+  };
+
+  const handleSyncNow = async () => {
+    setActionError(null);
+    try {
+      await syncNow();
+      setMessage("Cloud sync completed");
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Sync failed");
+    }
+  };
+
+  const handleUploadLocal = async () => {
+    setActionError(null);
+    try {
+      await uploadLocalToCloud();
+      setMessage("Local data uploaded to cloud");
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Upload failed");
     }
   };
 
@@ -132,7 +176,26 @@ export default function SettingsPage() {
     }
   })();
 
-  const displayError = actionError ?? settingsError;
+  const displayError = actionError ?? settingsError ?? syncError;
+
+  const syncStatusLabel = (() => {
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing…";
+      case "synced":
+        return lastSyncedAt
+          ? `Last synced ${new Date(lastSyncedAt).toLocaleString()}`
+          : "Synced";
+      case "offline":
+        return "Offline — changes will sync when back online";
+      case "error":
+        return "Sync error";
+      case "signed_out":
+        return "Not signed in";
+      default:
+        return "Ready";
+    }
+  })();
 
   return (
     <StorageGuard>
@@ -306,6 +369,57 @@ export default function SettingsPage() {
                         className="h-2 w-full cursor-pointer accent-indigo-600"
                       />
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cloud sync</CardTitle>
+                  <CardDescription>
+                    Keep your library, plans, and progress in sync across phone and desktop
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {signedIn ? (
+                    <>
+                      <p className="text-sm text-emerald-600">Signed in as {email}</p>
+                      <p className="text-sm text-zinc-500">{syncStatusLabel}</p>
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={handleSyncNow}
+                          disabled={syncStatus === "syncing"}
+                        >
+                          <Cloud className="h-4 w-4" />
+                          Sync now
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleUploadLocal}>
+                          Upload local data to cloud
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-zinc-500">
+                        Sign in with Google to sync your data across devices.
+                      </p>
+                      <GoogleConnectButton
+                        returnTo="/settings"
+                        label="Sign in with Google"
+                      />
+                    </>
+                  )}
+                  {showLocalhostHint && !signedIn && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      For Google sign-in, use{" "}
+                      <a href="http://localhost:3000/settings" className="underline">
+                        http://localhost:3000
+                      </a>{" "}
+                      — OAuth is registered for localhost, not your network IP.
+                    </p>
                   )}
                 </CardContent>
               </Card>

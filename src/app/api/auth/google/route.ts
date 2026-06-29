@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
+const SCOPES = [
+  "openid",
+  "email",
+  "profile",
+  "https://www.googleapis.com/auth/calendar.events",
+];
 
 function getRedirectUri(request: NextRequest): string {
   if (process.env.GOOGLE_REDIRECT_URI) {

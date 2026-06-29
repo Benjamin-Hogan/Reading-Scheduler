@@ -19,7 +19,8 @@ Plan multi-book reading schedules and live from your calendar — not a daily ha
 - **Light progress tracking** — update your current page when you visit
 - **Reading stats** — pages this week, books finished, active plans
 - **Past plans** — browse active, completed, and archived plans
-- **Local storage** — data stays in your browser (JSON export/import for backup)
+- **Cloud sync** — sign in with Google to sync library, plans, and progress across phone and desktop
+- **Local storage** — offline-first IndexedDB cache with JSON export/import for manual backup
 - **Polished UI** — animated backgrounds, spring transitions, confetti celebrations, and optional sound effects with volume control (Settings → Experience)
 - **Mobile-friendly** — bottom tab navigation, touch-friendly controls, safe-area support, and bottom-sheet dialogs on small screens
 
@@ -49,8 +50,10 @@ Open [http://localhost:3000](http://localhost:3000).
 | `GOOGLE_BOOKS_API_KEY` | Recommended | Avoids rate limits on book search |
 | `GOOGLE_CLIENT_ID` | For Calendar export | OAuth 2.0 Web client ID |
 | `GOOGLE_CLIENT_SECRET` | For Calendar export | OAuth 2.0 client secret |
-| `GOOGLE_REDIRECT_URI` | For Calendar export | Default: `http://localhost:3000/api/auth/google/callback` |
+| `GOOGLE_REDIRECT_URI` | For Calendar export & sync | Default: `http://localhost:3000/api/auth/google/callback` |
 | `FEED_DATA_DIR` | For calendar subscription feeds | Directory for persisted feed snapshots (default: `.feed-data` locally, `/tmp/reading-scheduler-feeds` on Vercel) |
+| `SESSION_SECRET` | Required in production | HMAC secret for signing cloud sync session cookies |
+| `SYNC_DATA_DIR` | Recommended in production | Directory for per-user cloud sync snapshots (default: `.sync-data` locally, `/tmp/reading-scheduler-sync` on Vercel) |
 
 ### Google Cloud Setup
 
@@ -83,8 +86,10 @@ The app deploys cleanly to [Vercel](https://vercel.com/) or any Node.js host tha
 
 1. Connect your repository and set the build command to `npm run build`
 2. Add the environment variables from the table above in your hosting dashboard
-3. For Google OAuth in production, add your production domain to authorized origins and redirect URIs in Google Cloud Console
-4. PWA icons live in `public/icons/`; the service worker caches the manifest and icons for installability
+3. Set `SESSION_SECRET` to a long random string in production
+4. For durable cloud sync and calendar feeds on Vercel, configure `SYNC_DATA_DIR` and `FEED_DATA_DIR` to a persistent volume (defaults under `/tmp` are ephemeral on serverless)
+5. For Google OAuth in production, add your production domain to authorized origins and redirect URIs in Google Cloud Console
+6. PWA icons live in `public/icons/`; the service worker caches the manifest and icons for installability
 
 See [docs/architecture.md](docs/architecture.md) for how client storage, the scheduler, and calendar export fit together.
 

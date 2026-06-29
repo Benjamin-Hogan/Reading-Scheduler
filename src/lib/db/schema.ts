@@ -7,6 +7,28 @@ export type PlanStatus = "active" | "completed" | "archived";
 export interface SyncFields {
   userId?: string | null;
   syncedAt?: string | null;
+  updatedAt?: string;
+}
+
+export type SyncTableName =
+  | "books"
+  | "readingPlans"
+  | "planBooks"
+  | "dailyAssignments"
+  | "settings";
+
+export interface DeletedRecord {
+  /** `${table}:${recordId}` */
+  id: string;
+  recordId: string;
+  table: SyncTableName;
+  deletedAt: string;
+}
+
+export interface Tombstone {
+  recordId: string;
+  table: SyncTableName;
+  deletedAt: string;
 }
 
 export interface Book extends SyncFields {
@@ -79,7 +101,7 @@ export interface DailyAssignment extends SyncFields {
   pagesToRead: number;
 }
 
-export interface AppSettings {
+export interface AppSettings extends SyncFields {
   id: string;
   defaultActiveDays: string[];
   preferredReadTime: string;
