@@ -4,12 +4,13 @@ import {
   batchDeleteGoogleCalendarEvents,
   refreshAccessToken,
 } from "@/lib/calendar/google";
+import { getGoogleAuthCookieOptions } from "@/lib/google/oauth";
 
 interface DeleteBody {
   iCalUIDs: string[];
 }
 
-async function getAccessToken(): Promise<string | null> {
+async function getAccessToken(request: NextRequest): Promise<string | null> {
   const cookieStore = await cookies();
   let accessToken = cookieStore.get("google_access_token")?.value;
   const refreshToken = cookieStore.get("google_refresh_token")?.value;
@@ -17,13 +18,11 @@ async function getAccessToken(): Promise<string | null> {
   if (!accessToken && refreshToken) {
     try {
       accessToken = await refreshAccessToken(refreshToken);
-      cookieStore.set("google_access_token", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 3600,
-        path: "/",
-      });
+      cookieStore.set(
+        "google_access_token",
+        accessToken,
+        getGoogleAuthCookieOptions(request, 3600)
+      );
     } catch {
       return null;
     }
@@ -33,7 +32,7 @@ async function getAccessToken(): Promise<string | null> {
 }
 
 export async function POST(request: NextRequest) {
-  const accessToken = await getAccessToken();
+  const accessToken = await getAccessToken(request);
   if (!accessToken) {
     return NextResponse.json(
       { error: "Not connected to Google Calendar" },

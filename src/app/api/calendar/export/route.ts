@@ -6,6 +6,7 @@ import {
   batchExportToGoogleCalendar,
   refreshAccessToken,
 } from "@/lib/calendar/google";
+import { getGoogleAuthCookieOptions } from "@/lib/google/oauth";
 
 interface ExportBody {
   planId: string;
@@ -24,13 +25,11 @@ export async function POST(request: NextRequest) {
   if (!accessToken && refreshToken) {
     try {
       accessToken = await refreshAccessToken(refreshToken);
-      cookieStore.set("google_access_token", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 3600,
-        path: "/",
-      });
+      cookieStore.set(
+        "google_access_token",
+        accessToken,
+        getGoogleAuthCookieOptions(request, 3600)
+      );
     } catch {
       return NextResponse.json(
         { error: "Session expired. Please reconnect Google Calendar." },

@@ -8,6 +8,7 @@ import { exportData, importData, downloadJson } from "@/lib/db/export-import";
 import { DEFAULT_ACTIVE_DAYS, WEEKDAYS, type WeekdayKey, type PlanTemplate } from "@/lib/db/schema";
 import { generateId } from "@/lib/utils";
 import { GoogleConnectButton } from "@/components/calendar/GoogleConnectButton";
+import { GoogleOAuthSetup } from "@/components/calendar/GoogleOAuthSetup";
 import { StorageGuard } from "@/components/layout/StorageGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,11 +36,6 @@ export default function SettingsPage() {
   });
   const [importStrategy, setImportStrategy] = useState<"merge" | "replace">("merge");
   const [templateName, setTemplateName] = useState("");
-  const [showLocalhostHint] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const host = window.location.hostname;
-    return host !== "localhost" && host !== "127.0.0.1";
-  });
 
   useEffect(() => {
     fetch("/api/auth/google/status")
@@ -316,20 +312,12 @@ export default function SettingsPage() {
                   <CardDescription>Export reading schedules directly to your calendar</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  <GoogleOAuthSetup />
                   <GoogleConnectButton
                     connected={googleConnected}
                     onDisconnect={handleDisconnect}
                     returnTo="/settings"
                   />
-                  {showLocalhostHint && (
-                    <p className="text-xs text-amber-700 dark:text-amber-300">
-                      For Google sign-in, use{" "}
-                      <a href="http://localhost:3000/settings" className="underline">
-                        http://localhost:3000
-                      </a>{" "}
-                      — OAuth is registered for localhost, not your network IP.
-                    </p>
-                  )}
                 </CardContent>
               </Card>
 

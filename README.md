@@ -42,29 +42,63 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Environment Variables
+### Phone / mobile testing
+
+**Same WiFi as your computer (local dev):**
+
+1. Run `npm run dev:mobile` (binds on all interfaces; default in Next.js 16).
+2. Find your computer's LAN IP (e.g. `192.168.1.42` on macOS/Linux: `ipconfig getifaddr en0` or `hostname -I`).
+3. On your phone (same WiFi), open `http://<your-lan-ip>:3000`.
+4. If you see cross-origin dev errors, add your IP to `allowedDevOrigins` in `next.config.ts` and restart.
+
+**Cloud / remote workspace (Cursor agent, Codespaces, etc.):**
+
+The `Network: http://172.x.x.x:3000` address is **internal to the VM** — your phone cannot reach it. Use a tunnel:
+
+```bash
+# Terminal 1
+npm run dev
+
+# Terminal 2
+npm run tunnel
+```
+
+Open the `https://….loca.lt` URL on your phone. First visit may ask for your public IP as a password (shown in the tunnel terminal or at https://loca.lt/mytunnelpassword).
+
+**Google on mobile:** In Settings, copy the origin and redirect URI into Google Cloud Console for your tunnel or LAN URL, then connect. See [docs/google-cloud-setup.md](docs/google-cloud-setup.md).
+
+# Google Cloud setup
+
+See **[docs/google-cloud-setup.md](docs/google-cloud-setup.md)** for step-by-step instructions (APIs, OAuth client, mobile/tunnel URLs).
+
+Quick start:
+
+```bash
+cp .env.local.example .env.local
+# Add GOOGLE_BOOKS_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+npm run dev
+```
+
+Open **Settings → Google Calendar** — copy the JavaScript origin and redirect URI shown there into [Google Cloud Console](https://console.cloud.google.com/apis/credentials) for whatever URL you use (localhost, LAN IP, or tunnel).
 
 | Variable | Required | Description |
 |---|---|---|
 | `GOOGLE_BOOKS_API_KEY` | Recommended | Avoids rate limits on book search |
 | `GOOGLE_CLIENT_ID` | For Calendar export | OAuth 2.0 Web client ID |
 | `GOOGLE_CLIENT_SECRET` | For Calendar export | OAuth 2.0 client secret |
-| `GOOGLE_REDIRECT_URI` | For Calendar export | Default: `http://localhost:3000/api/auth/google/callback` |
+| `GOOGLE_REDIRECT_URI` | Usually omit | Leave unset so OAuth uses your current origin. Set only for a fixed production callback. |
 | `FEED_DATA_DIR` | For calendar subscription feeds | Directory for persisted feed snapshots (default: `.feed-data` locally, `/tmp/reading-scheduler-feeds` on Vercel) |
 
-### Google Cloud Setup
+### Google Cloud Setup (localhost only)
 
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable **Books API** and **Google Calendar API**
-3. Create an API key (restrict to Books API)
-4. Create OAuth 2.0 Web credentials with these local dev URIs:
+For computer-only dev, add to your OAuth client:
 
 | Field | Value |
 |---|---|
 | Authorized JavaScript origins | `http://localhost:3000` |
 | Authorized redirect URIs | `http://localhost:3000/api/auth/google/callback` |
 
-**Important:** Open the app at `http://localhost:3000`, not your LAN IP (`192.168.x.x`). Google OAuth is registered for localhost unless you add the IP separately. If Next.js logs a cross-origin dev warning, use localhost or add your IP to `allowedDevOrigins` in `next.config.ts` and restart the dev server.
+For phone (LAN or tunnel), add those URLs too — see the setup guide and the URLs in Settings.
 
 ## Scripts
 

@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Allow LAN IP access during dev (e.g. http://192.168.x.x:3000) without HMR/cross-origin blocks
-  allowedDevOrigins: ["192.168.0.213", "127.0.0.1"],
+  // Allow LAN IPs and tunnel URLs during dev (phone testing, localtunnel, cloudflared)
+  allowedDevOrigins: [
+    "127.0.0.1",
+    "localhost",
+    "192.168.0.213",
+    "*.loca.lt",
+    "*.trycloudflare.com",
+  ],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "books.google.com" },
