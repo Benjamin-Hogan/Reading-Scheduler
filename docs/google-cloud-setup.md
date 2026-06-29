@@ -67,12 +67,14 @@ When using `npm run tunnel`, copy the exact `https://….loca.lt` URL from the t
 
 For a stable tunnel URL, use a paid ngrok reserved domain or Cloudflare Tunnel with a fixed hostname.
 
-### Production (Vercel, etc.)
+### Production (Docker / self-hosted)
 
 | Field | Value |
 |-------|-------|
 | JavaScript origin | `https://your-domain.com` |
 | Redirect URI | `https://your-domain.com/api/auth/google/callback` |
+
+See [self-hosting.md](./self-hosting.md) for Docker deployment and reverse-proxy setup.
 
 5. Copy the **Client ID** and **Client secret** into `.env.local`:
 

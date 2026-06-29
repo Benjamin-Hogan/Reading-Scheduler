@@ -87,7 +87,7 @@ Open **Settings → Google Calendar** — copy the JavaScript origin and redirec
 | `GOOGLE_CLIENT_ID` | For Calendar export | OAuth 2.0 Web client ID |
 | `GOOGLE_CLIENT_SECRET` | For Calendar export | OAuth 2.0 client secret |
 | `GOOGLE_REDIRECT_URI` | Usually omit | Leave unset so OAuth uses your current origin. Set only for a fixed production callback. |
-| `FEED_DATA_DIR` | For calendar subscription feeds | Directory for persisted feed snapshots (default: `.feed-data` locally, `/tmp/reading-scheduler-feeds` on Vercel) |
+| `FEED_DATA_DIR` | For calendar subscription feeds | Persisted at `/data/feeds` in Docker (volume). Default `.feed-data` locally. |
 
 ### Google Cloud Setup (localhost only)
 
@@ -113,12 +113,28 @@ npm run lint        # ESLint
 
 ## Deployment
 
-The app deploys cleanly to [Vercel](https://vercel.com/) or any Node.js host that supports Next.js 16.
+### Self-hosted (Docker) — recommended
 
-1. Connect your repository and set the build command to `npm run build`
-2. Add the environment variables from the table above in your hosting dashboard
-3. For Google OAuth in production, add your production domain to authorized origins and redirect URIs in Google Cloud Console
-4. PWA icons live in `public/icons/`; the service worker caches the manifest and icons for installability
+Run on your own server, NAS, or homelab:
+
+```bash
+cp .env.example .env
+# Add Google credentials — see docs/google-cloud-setup.md
+docker compose up -d --build
+```
+
+Full guide: **[docs/self-hosting.md](docs/self-hosting.md)** (reverse proxy, HTTPS, volumes, updates).
+
+The image uses Next.js **standalone** output. ICS subscription feeds persist in the `feed-data` Docker volume. User library data remains in each browser — use Settings → Export JSON for backups.
+
+### Vercel / managed Node
+
+The app also deploys to [Vercel](https://vercel.com/) or any Node.js host:
+
+1. Set build command to `npm run build` and start command to `npm run start`
+2. Add environment variables from the table above
+3. For Google OAuth, register your production domain in Google Cloud Console
+4. On serverless hosts, set `FEED_DATA_DIR` to persistent storage if you use subscription feeds
 
 See [docs/architecture.md](docs/architecture.md) for how client storage, the scheduler, and calendar export fit together.
 

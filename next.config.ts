@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // Allow LAN IPs and tunnel URLs during dev (phone testing, localtunnel, cloudflared)
   allowedDevOrigins: [
     "127.0.0.1",
